@@ -18,7 +18,7 @@ router.get('confirmed', '/api/confirmed/:country', async ctx => {
 
   const country = data.locations.find(loc => loc.country_code === ctx.params.country);
   country.history = Object.keys(country.history).reduce((acc, current) => {
-    const date = moment(current, 'MM/DD/YY').unix();
+    const date = moment(current, 'MM/DD/YY').valueOf();
     acc[date] = country.history[current];
     return acc;
   }, {});
