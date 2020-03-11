@@ -1,23 +1,25 @@
 <template>
   <v-app>
     <v-content>
-      <v-container id="input-usage" fluid>
+      <v-container
+id="input-usage" fluid
+>
         <v-row>
           <v-col cols="4">
-            <label>Landskod</label>
-            <input
-v-model="form.country" style="margin-left:5px;border: 1px solid;border-radius: 2px" />
-          </v-col>
-          <v-col cols="4">
-            <v-btn small color="primary" @click="search">
-              Sök
-            </v-btn>
+            <v-autocomplete
+              v-model="country"
+              :items="countryCodes"
+              color="blue"
+              hide-no-data
+              hide-selected
+              label="Select a country"
+              placeholder="Start typing to Search"
+              append-icon="expand_more"
+            />
           </v-col>
         </v-row>
         <v-row v-if="latest">
-          <v-col cols="12">
-Antal bekräftade fall: {{ latest }}
-</v-col>
+          <v-col cols="12"> Total confirmed: {{ latest }} </v-col>
         </v-row>
         <v-row v-if="chartData">
           <v-col cols="12">
@@ -37,22 +39,33 @@ import Chart from './Chart.vue';
 
 const axios = ax.default;
 export default {
-  name: 'HelloWorld',
+  name: 'SearchPanel',
   components: {
     Chart
   },
+  props: {
+    countryCodes: {
+      type: Array,
+      default: null
+    }
+  },
+  watch: {
+    country(val) {
+      if (val !== '') {
+        this.search();
+      }
+    }
+  },
   data() {
     return {
-      form: {
-        country: ''
-      },
+      country: '',
       latest: null,
       chartData: null
     };
   },
   methods: {
     search() {
-      axios.get(`/api/confirmed/${this.form.country}`).then(({ data }) => {
+      axios.get(`/api/confirmed/${this.country}`).then(({ data }) => {
         const historyKeys = Object.keys(data.country.history).sort((n1, n2) => (Number(n1) < Number(n2) ? -1 : 1));
         const history = historyKeys
           .map(key => {
@@ -67,7 +80,7 @@ export default {
           labels: history.map(h => h.day),
           datasets: [
             {
-              label: 'Bekräftade',
+              label: 'Confirmed',
               backgroundColor: '#f87979',
               data: history.map(h => h.confirmed)
             }
@@ -81,20 +94,4 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-</style>
+

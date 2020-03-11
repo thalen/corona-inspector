@@ -3,6 +3,7 @@ import * as json from 'koa-json';
 import * as KoaRouter from 'koa-router';
 import * as ax from 'axios';
 import * as moment from 'moment';
+import { COUNTRY_CODES } from './constants/countries';
 
 const axios = ax.default;
 const app = new Koa();
@@ -25,6 +26,19 @@ router.get('confirmed', '/api/confirmed/:country', async ctx => {
 
   ctx.body = {
     country
+  };
+});
+
+router.get('countryCodes', '/api/country-codes', ctx => {
+  const items = Object.keys(COUNTRY_CODES).map(key => {
+    return {
+      text: key,
+      value: COUNTRY_CODES[key]
+    };
+  });
+
+  ctx.body = {
+    items
   };
 });
 
