@@ -1,9 +1,7 @@
 <template>
   <v-app>
     <v-content>
-      <v-container
-id="input-usage" fluid
->
+      <v-container id="input-usage" fluid>
         <v-row>
           <v-col cols="4">
             <v-autocomplete
@@ -19,7 +17,12 @@ id="input-usage" fluid
           </v-col>
         </v-row>
         <v-row v-if="latest">
-          <v-col cols="12"> Total confirmed: {{ latest }} </v-col>
+          <v-col cols="3">
+            <span style="margin-top: 5px; position: absolute">Total confirmed: {{ latest }}</span>
+          </v-col>
+          <v-col cols="4">
+            <v-slider v-model="minIndex" min="0" :max="history.length" label="Start date" @end="updateInterval" />
+          </v-col>
         </v-row>
         <v-row v-if="chartData">
           <v-col cols="12">
@@ -49,6 +52,16 @@ export default {
       default: null
     }
   },
+  data() {
+    return {
+      country: '',
+      latest: null,
+      chartData: null,
+      minIndex: -1,
+      dataPoints: 0,
+      history: null
+    };
+  },
   watch: {
     country(val) {
       if (val !== '') {
@@ -56,14 +69,25 @@ export default {
       }
     }
   },
-  data() {
-    return {
-      country: '',
-      latest: null,
-      chartData: null
-    };
-  },
   methods: {
+    updateInterval() {
+      const updatedHistory = [];
+      for (let i = 0; i < this.history.length; i++) {
+        if (i >= this.minIndex) {
+          updatedHistory.push(this.history[i]);
+        }
+      }
+      this.chartData = {
+        labels: updatedHistory.map(h => h.day),
+        datasets: [
+          {
+            label: 'Confirmed',
+            backgroundColor: '#f87979',
+            data: updatedHistory.map(h => h.confirmed)
+          }
+        ]
+      };
+    },
     search() {
       axios.get(`/api/confirmed/${this.country}`).then(({ data }) => {
         const historyKeys = Object.keys(data.country.history).sort((n1, n2) => (Number(n1) < Number(n2) ? -1 : 1));
@@ -76,22 +100,29 @@ export default {
           })
           .filter(h => Number(h.confirmed) > 0);
 
+        this.history = history;
+        this.latest = data.country.latest;
+        this.minIndex = this.history.length / 2;
+
+        const updatedHistory = [];
+        for (let i = 0; i < this.history.length; i++) {
+          if (i >= this.minIndex) {
+            updatedHistory.push(this.history[i]);
+          }
+        }
+
         this.chartData = {
-          labels: history.map(h => h.day),
+          labels: updatedHistory.map(h => h.day),
           datasets: [
             {
               label: 'Confirmed',
               backgroundColor: '#f87979',
-              data: history.map(h => h.confirmed)
+              data: updatedHistory.map(h => h.confirmed)
             }
           ]
         };
-
-        this.latest = data.country.latest;
       });
     }
   }
 };
 </script>
-
-
