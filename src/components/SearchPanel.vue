@@ -5,6 +5,7 @@
         <v-row>
           <v-col cols="4">
             <v-autocomplete
+              style="max-width: 400px"
               v-model="country"
               :items="countryCodes"
               color="blue"

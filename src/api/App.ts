@@ -1,6 +1,7 @@
 import * as Koa from 'koa';
 import * as json from 'koa-json';
 import * as KoaRouter from 'koa-router';
+import * as serve from 'koa-static';
 import * as ax from 'axios';
 import * as moment from 'moment';
 import { COUNTRY_CODES } from './constants/countries';
@@ -10,9 +11,7 @@ const app = new Koa();
 const router = new KoaRouter();
 app.use(json());
 
-router.get('main', '/', ctx => {
-  ctx.body = 'Welcome! To the Koala Book of Everything!';
-});
+app.use(serve('dist'));
 
 router.get('confirmed', '/api/confirmed/:country', async ctx => {
   const { data } = await axios.get('https://coronavirus-tracker-api.herokuapp.com/confirmed');
