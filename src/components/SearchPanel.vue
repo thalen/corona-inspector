@@ -17,6 +17,11 @@
                         />
                     </v-col>
                 </v-row>
+                <v-row v-if="error">
+                    <v-alert type="error" icon="error" style="margin-left: 20px">
+                        Failed to load statistics for country {{ country }}
+                    </v-alert>
+                </v-row>
                 <v-row v-if="latest">
                     <v-col cols="3">
                         <span style="margin-top: 5px; position: absolute">Total confirmed: {{ latest }}</span>
@@ -32,6 +37,17 @@
                 </v-row>
             </v-container>
         </v-content>
+        <v-footer color="blue" app>
+            <span class="white--text">
+                Graph data points are provided by
+                <a style="color:white" target="_blank" href="https://github.com/ExpDev07/coronavirus-tracker-api"
+                    >Coronavirus-tracker-api</a
+                >
+                <br />
+                Data sets are collected from Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE) and they are
+                updated once per day. <br />&copy; 2020 Thalen solutions AB
+            </span>
+        </v-footer>
     </v-app>
 </template>
 
@@ -60,7 +76,8 @@ export default {
             chartData: null,
             minIndex: -1,
             dataPoints: 0,
-            history: null
+            history: null,
+            error: null
         };
     },
     watch: {
@@ -90,39 +107,47 @@ export default {
             };
         },
         search() {
-            axios.get(`/api/confirmed/${this.country}`).then(({ data }) => {
-                const historyKeys = Object.keys(data.country.history).sort((n1, n2) => (Number(n1) < Number(n2) ? -1 : 1));
-                const history = historyKeys
-                    .map(key => {
-                        return {
-                            day: moment(Number(key)).format('YYYY-MM-DD'),
-                            confirmed: data.country.history[key]
-                        };
-                    })
-                    .filter(h => Number(h.confirmed) > 0);
+            axios
+                .get(`/api/confirmed/${this.country}`)
+                .then(({ data }) => {
+                    this.error = null;
+                    const historyKeys = Object.keys(data.country.history).sort((n1, n2) => (Number(n1) < Number(n2) ? -1 : 1));
+                    const history = historyKeys
+                        .map(key => {
+                            return {
+                                day: moment(Number(key)).format('YYYY-MM-DD'),
+                                confirmed: data.country.history[key]
+                            };
+                        })
+                        .filter(h => Number(h.confirmed) > 0);
 
-                this.history = history;
-                this.latest = data.country.latest;
-                this.minIndex = this.history.length / 2;
+                    this.history = history;
+                    this.latest = data.country.latest;
+                    this.minIndex = this.history.length / 2;
 
-                const updatedHistory = [];
-                for (let i = 0; i < this.history.length; i++) {
-                    if (i >= this.minIndex) {
-                        updatedHistory.push(this.history[i]);
-                    }
-                }
-
-                this.chartData = {
-                    labels: updatedHistory.map(h => h.day),
-                    datasets: [
-                        {
-                            label: 'Confirmed',
-                            backgroundColor: '#f87979',
-                            data: updatedHistory.map(h => h.confirmed)
+                    const updatedHistory = [];
+                    for (let i = 0; i < this.history.length; i++) {
+                        if (i >= this.minIndex) {
+                            updatedHistory.push(this.history[i]);
                         }
-                    ]
-                };
-            });
+                    }
+
+                    this.chartData = {
+                        labels: updatedHistory.map(h => h.day),
+                        datasets: [
+                            {
+                                label: 'Confirmed',
+                                backgroundColor: '#f87979',
+                                data: updatedHistory.map(h => h.confirmed)
+                            }
+                        ]
+                    };
+                })
+                .catch(() => {
+                    this.error = true;
+                    this.latest = null;
+                    this.chartData = null;
+                });
         }
     }
 };
