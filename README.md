@@ -28,3 +28,5 @@ yarn run build
 ```
 yarn run lint
 ```
+
+App available at: https://covid-19-visualizer.herokuapp.com/
