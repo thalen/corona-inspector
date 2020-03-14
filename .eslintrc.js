@@ -4,8 +4,8 @@ module.exports = {
         node: true
     },
     extends: [
-        "plugin:prettier/recommended",
-        "plugin:vue/recommended"
+        "plugin:vue/essential",
+        "plugin:prettier/recommended"
     ],
     rules: {
         "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
@@ -16,5 +16,6 @@ module.exports = {
     },
     parserOptions: {
         parser: "babel-eslint"
-    },
+    }
+
 };
