@@ -1,7 +1,5 @@
 <template>
     <div id="app">
-        <img alt="Corona logo" src="./assets/covid-19.jpeg" />
-
         <SearchPanel v-if="items" :country-codes="items" />
     </div>
 </template>

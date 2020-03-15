@@ -3,6 +3,11 @@
         <v-content>
             <v-container id="input-usage" fluid>
                 <v-row>
+                    <v-col cols="12" md="4">
+                        <v-img src="../assets/covid-19.jpeg" aspect-ratio="2" contain></v-img>
+                    </v-col>
+                </v-row>
+                <v-row>
                     <v-col cols="12">
                         <v-autocomplete
                             v-model="country"
@@ -23,11 +28,19 @@
                     </v-alert>
                 </v-row>
                 <v-row v-if="latest">
-                    <v-col cols="3">
-                        <span style="margin-top: 5px; position: absolute">Total confirmed: {{ latest }}</span>
+                    <v-col cols="12" md="4">
+                        <span style="margin-top: 5px; position: absolute"
+                            >Total confirmed: <strong>{{ latest }} </strong></span
+                        >
                     </v-col>
-                    <v-col cols="4">
-                        <v-slider v-model="minIndex" min="0" :max="history.length" label="Start date" @end="updateInterval" />
+                    <v-col cols="12" md="4">
+                        <v-slider hide-details v-model="minIndex" min="0" :max="history.length" label="Start date:" @end="updateInterval">
+                            <template v-slot:append>
+                                <span style="width: 81px">
+                                    {{ displayDate() }}
+                                </span>
+                            </template>
+                        </v-slider>
                     </v-col>
                 </v-row>
                 <v-row v-if="chartData">
@@ -110,6 +123,10 @@ export default {
                     }
                 ]
             };
+        },
+        displayDate() {
+            const date = this.history[this.minIndex];
+            return date ? date.day : '';
         },
         search() {
             axios
