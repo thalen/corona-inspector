@@ -2,8 +2,8 @@
     <v-app>
         <v-content>
             <v-container id="input-usage" fluid>
-                <v-row fluid>
-                    <v-col cols="4">
+                <v-row>
+                    <v-col cols="12">
                         <v-autocomplete
                             v-model="country"
                             style="max-width: 400px"
@@ -37,16 +37,21 @@
                 </v-row>
             </v-container>
         </v-content>
-        <v-footer color="blue" app>
-            <span class="white--text">
-                Graph data points are provided by
-                <a style="color:white" target="_blank" href="https://github.com/ExpDev07/coronavirus-tracker-api"
-                    >Coronavirus-tracker-api</a
-                >
-                <br />
-                Data sets are collected from Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE) and they are
-                updated once per day. <br />&copy; 2020 Thalen solutions AB
-            </span>
+        <v-footer color="white" app>
+            <v-expansion-panels>
+                <v-expansion-panel style="background-color: #2196F3; border-color: #2196F3">
+                    <v-expansion-panel-header style="color: white">&copy; 2020 Thalen solutions AB</v-expansion-panel-header>
+                    <v-expansion-panel-content style="color: white">
+                        Graph data points are provided by
+                        <a style="color:white" target="_blank" href="https://github.com/ExpDev07/coronavirus-tracker-api"
+                            >Coronavirus-tracker-api</a
+                        >
+                        <br />
+                        Data sets are collected from Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE) and they
+                        are updated once per day.
+                    </v-expansion-panel-content>
+                </v-expansion-panel>
+            </v-expansion-panels>
         </v-footer>
     </v-app>
 </template>
