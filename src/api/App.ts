@@ -18,19 +18,34 @@ app.use(serve('dist'));
 router.get('confirmed', '/api/confirmed/:country', async ctx => {
     const { data } = await axios.get('https://coronavirus-tracker-api.herokuapp.com/confirmed');
 
-    const countries = data.locations.filter(loc => loc.country_code === ctx.params.country);
-    if (countries.length !== 1) {
+    const result = data.locations.filter(loc => loc.country_code === ctx.params.country);
+    if (result.length === 0) {
         ctx.throw(400, 'Failed to load statistics');
     } else {
-        const country = countries[0];
-        country.history = Object.keys(country.history).reduce((acc, current) => {
-            const date = moment(current, 'MM/DD/YY').valueOf();
-            acc[date] = country.history[current];
-            return acc;
-        }, {});
+        const countries = result.map(country => {
+            let history = Object.keys(country.history).map(date => {
+                const timestamp = moment(date, 'MM/DD/YY').valueOf();
+                return {
+                    timestamp,
+                    day: moment(timestamp).format('YYYY-MM-DD'),
+                    confirmed: country.history[date]
+                };
+            });
+            history = history.sort((n1, n2) => (n1.timestamp < n2.timestamp ? -1 : 1));
+            return {
+                country: country.country,
+                province: country.province,
+                latest: country.latest,
+                history
+            };
+        });
 
+        const dataSets = {
+            dataSets: countries,
+            labels: countries[0].history.map(h => h.day)
+        };
         ctx.body = {
-            country
+            ...dataSets
         };
     }
 });

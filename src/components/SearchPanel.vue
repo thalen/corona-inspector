@@ -133,39 +133,36 @@ export default {
                 .get(`/api/confirmed/${this.country}`)
                 .then(({ data }) => {
                     this.error = null;
-                    const historyKeys = Object.keys(data.country.history).sort((n1, n2) => (Number(n1) < Number(n2) ? -1 : 1));
-                    const history = historyKeys
-                        .map(key => {
-                            return {
-                                day: moment(Number(key)).format('YYYY-MM-DD'),
-                                confirmed: data.country.history[key]
-                            };
-                        })
-                        .filter(h => Number(h.confirmed) > 0);
+                    this.history = data;
+                    this.latest = data.dataSets.map(d => d.latest).reduce((acc, current) => acc + current);
+                    this.minIndex = data.labels.length / 2;
 
-                    this.history = history;
-                    this.latest = data.country.latest;
-                    this.minIndex = this.history.length / 2;
-
-                    const updatedHistory = [];
-                    for (let i = 0; i < this.history.length; i++) {
+                    const updatedLabels = [];
+                    for (let i = 0; i < data.labels.length; i++) {
                         if (i >= this.minIndex) {
-                            updatedHistory.push(this.history[i]);
+                            updatedLabels.push(data.labels[i]);
                         }
                     }
-
-                    this.chartData = {
-                        labels: updatedHistory.map(h => h.day),
-                        datasets: [
-                            {
-                                label: 'Confirmed',
-                                backgroundColor: '#f87979',
-                                data: updatedHistory.map(h => h.confirmed)
+                    const datasets = data.dataSets.map(d => {
+                        const updatedHistory = [];
+                        for (let i = 0; i < d.history.length; i++) {
+                            if (i >= this.minIndex) {
+                                updatedHistory.push(d.history[i].confirmed);
                             }
-                        ]
+                        }
+                        return {
+                            label: d.province ? `Confirmed in ${d.province}` : 'Confirmed',
+                            backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                            data: updatedHistory
+                        };
+                    });
+                    this.chartData = {
+                        labels: updatedLabels,
+                        datasets
                     };
                 })
-                .catch(() => {
+                .catch(error => {
+                    console.error(error);
                     this.error = true;
                     this.latest = null;
                     this.chartData = null;
