@@ -22,6 +22,19 @@
                         />
                     </v-col>
                 </v-row>
+                <v-row v-if="chartData && history.dataSets.length > 1">
+                    <v-col cols="12">
+                        <v-select
+                            style="max-width: 400px"
+                            v-model="selectedRegions"
+                            :items="regions"
+                            chips
+                            multiple
+                            label="Välj regioner"
+                            @blur="regionsSelected"
+                        />
+                    </v-col>
+                </v-row>
                 <v-row v-if="error">
                     <v-alert type="error" icon="error" style="margin-left: 20px">
                         Failed to load statistics for country {{ country }}
@@ -45,7 +58,8 @@
                 </v-row>
                 <v-row v-if="chartData">
                     <v-col cols="12">
-                        <Chart :chart-data="chartData" />
+                        <LineChart v-if="history.dataSets.length === 1" :chart-data="chartData" />
+                        <BarChart v-if="history.dataSets.length > 1 && regionsIsSet" :chart-data="chartData" />
                     </v-col>
                 </v-row>
             </v-container>
@@ -71,15 +85,17 @@
 
 <script>
 import * as ax from 'axios';
-import moment from 'moment';
 
-import Chart from './Chart.vue';
+import LineChart from './LineChart.vue';
+import BarChart from './BarChart.vue';
+import { mapDataSets } from '../services/SearchService';
 
 const axios = ax.default;
 export default {
     name: 'SearchPanel',
     components: {
-        Chart
+        LineChart,
+        BarChart
     },
     props: {
         countryCodes: {
@@ -95,6 +111,9 @@ export default {
             minIndex: -1,
             dataPoints: 0,
             history: null,
+            regions: null,
+            selectedRegions: null,
+            regionsIsSet: false,
             error: null
         };
     },
@@ -106,60 +125,58 @@ export default {
         }
     },
     methods: {
+        regionsSelected() {
+            this.regionsIsSet = true;
+            const datasets = this.history.dataSets.filter(d => this.selectedRegions.includes(d.province));
+            const updatedDataSets = mapDataSets(datasets, this.minIndex);
+            this.chartData = {
+                labels: this.chartData.labels,
+                datasets: updatedDataSets
+            };
+        },
         updateInterval() {
-            const updatedHistory = [];
-            for (let i = 0; i < this.history.length; i++) {
+            const updatedLabels = [];
+            for (let i = 0; i < this.history.labels.length; i++) {
                 if (i >= this.minIndex) {
-                    updatedHistory.push(this.history[i]);
+                    updatedLabels.push(this.history.labels[i]);
                 }
             }
+            const datasets = mapDataSets(this.history.dataSets, this.minIndex);
             this.chartData = {
-                labels: updatedHistory.map(h => h.day),
-                datasets: [
-                    {
-                        label: 'Confirmed',
-                        backgroundColor: '#f87979',
-                        data: updatedHistory.map(h => h.confirmed)
-                    }
-                ]
+                labels: updatedLabels,
+                datasets
             };
         },
         displayDate() {
-            const date = this.history[this.minIndex];
-            return date ? date.day : '';
+            return this.history.labels[this.minIndex];
         },
         search() {
+            if (!this.country) {
+                return;
+            }
             axios
                 .get(`/api/confirmed/${this.country}`)
                 .then(({ data }) => {
                     this.error = null;
                     this.history = data;
                     this.latest = data.dataSets.map(d => d.latest).reduce((acc, current) => acc + current);
-                    this.minIndex = data.labels.length / 2;
-
+                    this.minIndex = data.labels.length - 15;
+                    if (this.minIndex < 0) {
+                        this.minIndex = 0;
+                    }
                     const updatedLabels = [];
                     for (let i = 0; i < data.labels.length; i++) {
                         if (i >= this.minIndex) {
                             updatedLabels.push(data.labels[i]);
                         }
                     }
-                    const datasets = data.dataSets.map(d => {
-                        const updatedHistory = [];
-                        for (let i = 0; i < d.history.length; i++) {
-                            if (i >= this.minIndex) {
-                                updatedHistory.push(d.history[i].confirmed);
-                            }
-                        }
-                        return {
-                            label: d.province ? `Confirmed in ${d.province}` : 'Confirmed',
-                            backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                            data: updatedHistory
-                        };
-                    });
+                    const datasets = mapDataSets(data.dataSets, this.minIndex);
                     this.chartData = {
                         labels: updatedLabels,
                         datasets
                     };
+                    this.regions = data.dataSets.map(d => d.province);
+                    this.regionsIsSet = false;
                 })
                 .catch(error => {
                     console.error(error);
