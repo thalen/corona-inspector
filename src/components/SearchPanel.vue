@@ -30,7 +30,7 @@
                             :items="regions"
                             chips
                             multiple
-                            label="Välj regioner"
+                            label="Select regions"
                             @blur="regionsSelected"
                         />
                     </v-col>
