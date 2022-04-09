@@ -19,7 +19,7 @@
     "koa-json": "2.0.2",
     "koa-router": "8.0.8",
     "koa-static": "5.0.0",
-    "moment": "2.24.0",
+    "moment": "2.29.2",
     "typescript": "3.8.3",
     "vue": "^2.6.10",
     "vue-router": "^3.0.2",
